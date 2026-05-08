@@ -4,8 +4,11 @@ const PREDICT_URL = 'http://localhost:5000/predict';
 
 const emptyFormValues = {
   studentName: '',
+  faculty: '',
+  course: '',
   grade: '',
-  attendance: '',
+  totalClasses: '',
+  absences: '',
   failedSubjects: '',
   socioeconomicLevel: '1',
 };
@@ -19,16 +22,30 @@ function calculateAverage(values) {
   return Number((total / values.length).toFixed(2));
 }
 
+function calculateAttendancePercentage(totalClasses, absences) {
+  const total = Number(totalClasses);
+  const missed = Number(absences);
+
+  if (!total || total <= 0 || Number.isNaN(total) || Number.isNaN(missed)) {
+    return 0;
+  }
+
+  return Number((((total - missed) / total) * 100).toFixed(2));
+}
+
 function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [grades, setGrades] = useState([]);
-  const [attendanceValues, setAttendanceValues] = useState([]);
   const [errors, setErrors] = useState({});
 
   const averageGrade = useMemo(() => calculateAverage(grades), [grades]);
   const attendancePercentage = useMemo(
-    () => calculateAverage(attendanceValues),
-    [attendanceValues]
+    () =>
+      calculateAttendancePercentage(
+        formValues.totalClasses,
+        formValues.absences
+      ),
+    [formValues.totalClasses, formValues.absences]
   );
 
   const updateField = (event) => {
@@ -70,37 +87,29 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
     setErrors((currentErrors) => ({ ...currentErrors, grade: '' }));
   };
 
-  const addAttendance = () => {
-    const error = validateNumber(
-      formValues.attendance,
-      0,
-      100,
-      'La asistencia'
-    );
-
-    if (error) {
-      setErrors((currentErrors) => ({ ...currentErrors, attendance: error }));
-      return;
-    }
-
-    setAttendanceValues((currentValues) => [
-      ...currentValues,
-      Number(formValues.attendance),
-    ]);
-    setFormValues((currentValues) => ({ ...currentValues, attendance: '' }));
-    setErrors((currentErrors) => ({ ...currentErrors, attendance: '' }));
-  };
-
   const removeGrade = (indexToRemove) => {
     setGrades((currentGrades) =>
       currentGrades.filter((_, index) => index !== indexToRemove)
     );
   };
 
-  const removeAttendance = (indexToRemove) => {
-    setAttendanceValues((currentValues) =>
-      currentValues.filter((_, index) => index !== indexToRemove)
-    );
+  const validateAttendance = (nextErrors) => {
+    const totalClasses = Number(formValues.totalClasses);
+    const absences = Number(formValues.absences);
+
+    if (formValues.totalClasses === '' || Number.isNaN(totalClasses)) {
+      nextErrors.totalClasses = 'El total de clases es obligatorio.';
+    } else if (totalClasses <= 0) {
+      nextErrors.totalClasses = 'El total de clases debe ser mayor que 0.';
+    }
+
+    if (formValues.absences === '' || Number.isNaN(absences)) {
+      nextErrors.absences = 'Las faltas son obligatorias.';
+    } else if (absences < 0) {
+      nextErrors.absences = 'Las faltas no pueden ser negativas.';
+    } else if (!Number.isNaN(totalClasses) && totalClasses > 0 && absences > totalClasses) {
+      nextErrors.absences = 'Las faltas no pueden superar el total de clases.';
+    }
   };
 
   const validateForm = () => {
@@ -110,14 +119,19 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
       nextErrors.studentName = 'El nombre del estudiante es obligatorio.';
     }
 
+    if (!formValues.faculty.trim()) {
+      nextErrors.faculty = 'La facultad es obligatoria.';
+    }
+
+    if (!formValues.course.trim()) {
+      nextErrors.course = 'El curso es obligatorio.';
+    }
+
     if (grades.length === 0) {
       nextErrors.grades = 'Ingresa al menos una nota para calcular el promedio.';
     }
 
-    if (attendanceValues.length === 0) {
-      nextErrors.attendanceValues =
-        'Ingresa al menos un valor de asistencia para calcular el promedio.';
-    }
+    validateAttendance(nextErrors);
 
     const failedSubjectsError = validateNumber(
       formValues.failedSubjects,
@@ -180,7 +194,11 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
       onResult(prediction);
       onPredictionCreated({
         studentName: formValues.studentName.trim(),
+        faculty: formValues.faculty.trim(),
+        course: formValues.course.trim(),
         averageGrade,
+        totalClasses: Number(formValues.totalClasses),
+        absences: Number(formValues.absences),
         attendancePercentage,
         failedSubjects: payload.failed_subjects,
         socioeconomicLevel: payload.socioeconomic_level,
@@ -201,7 +219,7 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
 
   return (
     <form className="student-form" onSubmit={handleSubmit}>
-      <section className="form-section">
+      <section className="form-section grid-section">
         <div className="field-control">
           <label htmlFor="studentName">Nombre del estudiante</label>
           <input
@@ -216,12 +234,55 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
             <p className="error-message">{errors.studentName}</p>
           )}
         </div>
+
+        <div className="field-control">
+          <label htmlFor="faculty">Facultad</label>
+          <input
+            id="faculty"
+            name="faculty"
+            type="text"
+            value={formValues.faculty}
+            onChange={updateField}
+            placeholder="Ej: Ingeniería"
+          />
+          {errors.faculty && <p className="error-message">{errors.faculty}</p>}
+        </div>
+
+        <div className="field-control">
+          <label htmlFor="course">Curso</label>
+          <input
+            id="course"
+            name="course"
+            type="text"
+            value={formValues.course}
+            onChange={updateField}
+            placeholder="Ej: Programación I"
+          />
+          {errors.course && <p className="error-message">{errors.course}</p>}
+        </div>
+
+        <div className="field-control">
+          <label htmlFor="socioeconomicLevel">Nivel socioeconómico</label>
+          <select
+            id="socioeconomicLevel"
+            name="socioeconomicLevel"
+            value={formValues.socioeconomicLevel}
+            onChange={updateField}
+          >
+            <option value="1">1 - Bajo</option>
+            <option value="2">2 - Medio</option>
+            <option value="3">3 - Alto</option>
+          </select>
+          {errors.socioeconomicLevel && (
+            <p className="error-message">{errors.socioeconomicLevel}</p>
+          )}
+        </div>
       </section>
 
       <section className="form-section">
         <div className="section-heading">
-          <h2>Notas</h2>
-          <span>Promedio: {averageGrade.toFixed(2)}</span>
+          <h2>Promedio académico</h2>
+          <span>{averageGrade.toFixed(2)}</span>
         </div>
 
         <div className="inline-control">
@@ -259,46 +320,49 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
       <section className="form-section">
         <div className="section-heading">
           <h2>Asistencia</h2>
-          <span>Promedio: {attendancePercentage.toFixed(2)}%</span>
+          <span>{attendancePercentage.toFixed(2)}%</span>
         </div>
 
-        <div className="inline-control">
-          <label htmlFor="attendance">Agregar asistencia</label>
-          <input
-            id="attendance"
-            name="attendance"
-            type="number"
-            min="0"
-            max="100"
-            step="0.01"
-            value={formValues.attendance}
-            onChange={updateField}
-            placeholder="Ej: 92"
-          />
-          <button type="button" onClick={addAttendance}>
-            Agregar
-          </button>
-        </div>
-        {errors.attendance && (
-          <p className="error-message">{errors.attendance}</p>
-        )}
-        {errors.attendanceValues && (
-          <p className="error-message">{errors.attendanceValues}</p>
-        )}
+        <div className="grid-section">
+          <div className="field-control">
+            <label htmlFor="totalClasses">Total de clases</label>
+            <input
+              id="totalClasses"
+              name="totalClasses"
+              type="number"
+              min="1"
+              step="1"
+              value={formValues.totalClasses}
+              onChange={updateField}
+              placeholder="Ej: 40"
+            />
+            {errors.totalClasses && (
+              <p className="error-message">{errors.totalClasses}</p>
+            )}
+          </div>
 
-        <ul className="value-list" aria-label="Asistencias ingresadas">
-          {attendanceValues.map((attendance, index) => (
-            <li key={`${attendance}-${index}`}>
-              <span>{attendance.toFixed(2)}%</span>
-              <button type="button" onClick={() => removeAttendance(index)}>
-                Eliminar
-              </button>
-            </li>
-          ))}
-        </ul>
+          <div className="field-control">
+            <label htmlFor="absences">Faltas</label>
+            <input
+              id="absences"
+              name="absences"
+              type="number"
+              min="0"
+              step="1"
+              value={formValues.absences}
+              onChange={updateField}
+              placeholder="Ej: 4"
+            />
+            {errors.absences && <p className="error-message">{errors.absences}</p>}
+          </div>
+        </div>
+
+        <p className="calculated-help">
+          attendance_percentage = ((total_classes - absences) / total_classes) × 100
+        </p>
       </section>
 
-      <section className="form-section grid-section">
+      <section className="form-section">
         <div className="field-control">
           <label htmlFor="failedSubjects">Materias perdidas</label>
           <input
@@ -313,23 +377,6 @@ function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
           />
           {errors.failedSubjects && (
             <p className="error-message">{errors.failedSubjects}</p>
-          )}
-        </div>
-
-        <div className="field-control">
-          <label htmlFor="socioeconomicLevel">Nivel socioeconómico</label>
-          <select
-            id="socioeconomicLevel"
-            name="socioeconomicLevel"
-            value={formValues.socioeconomicLevel}
-            onChange={updateField}
-          >
-            <option value="1">1 - Bajo</option>
-            <option value="2">2 - Medio</option>
-            <option value="3">3 - Alto</option>
-          </select>
-          {errors.socioeconomicLevel && (
-            <p className="error-message">{errors.socioeconomicLevel}</p>
           )}
         </div>
       </section>

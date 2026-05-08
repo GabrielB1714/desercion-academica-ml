@@ -16,18 +16,18 @@ function formatPercentage(value) {
 function StudentsTable({ students }) {
   if (students.length === 0) {
     return (
-      <section className="history-card empty-history">
+      <section className="panel history-card empty-history">
         No hay predicciones registradas
       </section>
     );
   }
 
   return (
-    <section className="history-card">
+    <section className="panel history-card">
       <div className="history-header">
         <div>
-          <p className="eyebrow">Historial</p>
-          <h2>Predicciones registradas</h2>
+          <p className="eyebrow">Historial académico</p>
+          <h2>Predicciones registradas por curso</h2>
         </div>
         <span>
           {students.length} estudiante{students.length === 1 ? '' : 's'}
@@ -39,8 +39,12 @@ function StudentsTable({ students }) {
           <thead>
             <tr>
               <th>Nombre</th>
+              <th>Facultad</th>
+              <th>Curso</th>
               <th>Promedio académico</th>
-              <th>Promedio asistencia</th>
+              <th>Total clases</th>
+              <th>Faltas</th>
+              <th>Asistencia</th>
               <th>Materias perdidas</th>
               <th>Nivel socioeconómico</th>
               <th>Porcentaje de riesgo</th>
@@ -56,10 +60,14 @@ function StudentsTable({ students }) {
               return (
                 <tr key={student.id}>
                   <td data-label="Nombre">{student.studentName}</td>
+                  <td data-label="Facultad">{student.faculty}</td>
+                  <td data-label="Curso">{student.course}</td>
                   <td data-label="Promedio académico">
                     {student.averageGrade.toFixed(2)}
                   </td>
-                  <td data-label="Promedio asistencia">
+                  <td data-label="Total clases">{student.totalClasses}</td>
+                  <td data-label="Faltas">{student.absences}</td>
+                  <td data-label="Asistencia">
                     {student.attendancePercentage.toFixed(2)}%
                   </td>
                   <td data-label="Materias perdidas">

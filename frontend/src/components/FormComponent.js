@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 const PREDICT_URL = 'http://localhost:5000/predict';
 
 const emptyFormValues = {
+  studentName: '',
   grade: '',
   attendance: '',
   failedSubjects: '',
@@ -18,7 +19,7 @@ function calculateAverage(values) {
   return Number((total / values.length).toFixed(2));
 }
 
-function FormComponent({ onResult, onLoadingChange }) {
+function FormComponent({ onResult, onLoadingChange, onPredictionCreated }) {
   const [formValues, setFormValues] = useState(emptyFormValues);
   const [grades, setGrades] = useState([]);
   const [attendanceValues, setAttendanceValues] = useState([]);
@@ -105,6 +106,10 @@ function FormComponent({ onResult, onLoadingChange }) {
   const validateForm = () => {
     const nextErrors = {};
 
+    if (!formValues.studentName.trim()) {
+      nextErrors.studentName = 'El nombre del estudiante es obligatorio.';
+    }
+
     if (grades.length === 0) {
       nextErrors.grades = 'Ingresa al menos una nota para calcular el promedio.';
     }
@@ -173,6 +178,15 @@ function FormComponent({ onResult, onLoadingChange }) {
 
       const prediction = await response.json();
       onResult(prediction);
+      onPredictionCreated({
+        studentName: formValues.studentName.trim(),
+        averageGrade,
+        attendancePercentage,
+        failedSubjects: payload.failed_subjects,
+        socioeconomicLevel: payload.socioeconomic_level,
+        riskPercentage: prediction.risk_percentage,
+        riskLevel: prediction.risk_level,
+      });
     } catch (error) {
       onResult(null);
       setErrors((currentErrors) => ({
@@ -187,6 +201,23 @@ function FormComponent({ onResult, onLoadingChange }) {
 
   return (
     <form className="student-form" onSubmit={handleSubmit}>
+      <section className="form-section">
+        <div className="field-control">
+          <label htmlFor="studentName">Nombre del estudiante</label>
+          <input
+            id="studentName"
+            name="studentName"
+            type="text"
+            value={formValues.studentName}
+            onChange={updateField}
+            placeholder="Ej: Laura Gómez"
+          />
+          {errors.studentName && (
+            <p className="error-message">{errors.studentName}</p>
+          )}
+        </div>
+      </section>
+
       <section className="form-section">
         <div className="section-heading">
           <h2>Notas</h2>

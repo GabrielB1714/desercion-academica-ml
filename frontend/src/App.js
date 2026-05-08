@@ -2,10 +2,22 @@ import { useState } from 'react';
 import './App.css';
 import FormComponent from './components/FormComponent';
 import ResultComponent from './components/ResultComponent';
+import StudentsTable from './components/StudentsTable';
 
 function App() {
   const [predictionResult, setPredictionResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [studentsHistory, setStudentsHistory] = useState([]);
+
+  const addStudentPrediction = (studentPrediction) => {
+    setStudentsHistory((currentHistory) => [
+      {
+        id: `${Date.now()}-${currentHistory.length}`,
+        ...studentPrediction,
+      },
+      ...currentHistory,
+    ]);
+  };
 
   return (
     <main className="app-shell">
@@ -22,9 +34,12 @@ function App() {
         <FormComponent
           onResult={setPredictionResult}
           onLoadingChange={setIsLoading}
+          onPredictionCreated={addStudentPrediction}
         />
 
         <ResultComponent result={predictionResult} isLoading={isLoading} />
+
+        <StudentsTable students={studentsHistory} />
       </section>
     </main>
   );

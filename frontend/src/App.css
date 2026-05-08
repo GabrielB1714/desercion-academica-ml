@@ -275,3 +275,149 @@ select:focus {
     flex-direction: column;
   }
 }
+
+.history-card {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.empty-history {
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.history-header h2,
+.history-header p {
+  margin: 0;
+}
+
+.history-header span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+}
+
+.students-table th,
+.students-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.students-table th {
+  color: #475569;
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.students-table td {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.students-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.risk-badge.risk-medium {
+  color: #422006;
+}
+
+@media (max-width: 720px) {
+  .history-card {
+    padding: 18px;
+  }
+
+  .history-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .table-wrapper {
+    overflow-x: visible;
+  }
+
+  .students-table {
+    min-width: 0;
+  }
+
+  .students-table thead {
+    display: none;
+  }
+
+  .students-table,
+  .students-table tbody,
+  .students-table tr,
+  .students-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .students-table tr {
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #f8fafc;
+  }
+
+  .students-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: right;
+  }
+
+  .students-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .students-table td::before {
+    content: attr(data-label);
+    color: #475569;
+    font-weight: 800;
+    text-align: left;
+  }
+}
